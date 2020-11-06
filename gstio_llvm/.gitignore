@@ -52,19 +52,19 @@ projects/*
 runtimes/*
 !runtimes/*.*
 # Clang, which is tracked independently.
-tools/clang
+#tools/clang
 # LLDB, which is tracked independently.
-tools/lldb
+#tools/lldb
 # lld, which is tracked independently.
-tools/lld
+#tools/lld
 # llgo, which is tracked independently.
-tools/llgo
+#tools/llgo
 # Polly, which is tracked independently.
-tools/polly
+#tools/polly
 # avrlit, which is tracked independently.
-tools/avrlit
+#tools/avrlit
 # Sphinx build tree, if building in-source dir.
-docs/_build
+#docs/_build
 # VS2017 and VSCode config files.
 .vscode
 .vs
@@ -72,5 +72,5 @@ docs/_build
 #==============================================================================#
 # Files created in tree by the Go bindings.
 #==============================================================================#
-bindings/go/llvm/llvm_config.go
-bindings/go/llvm/workdir
+#bindings/go/llvm/llvm_config.go
+#bindings/go/llvm/workdir

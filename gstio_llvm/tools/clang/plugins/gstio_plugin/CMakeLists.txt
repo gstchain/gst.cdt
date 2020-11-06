@@ -1,0 +1,1 @@
+add_llvm_loadable_module(gstio_plugin gstio_autogen.cpp PLUGIN_TOOL clang)
