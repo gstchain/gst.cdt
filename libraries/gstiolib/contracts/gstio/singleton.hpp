@@ -17,7 +17,7 @@ namespace  gstio {
     *  @tparam SingletonName - the name of this singleton variable
     *  @tparam T - the type of the singleton
     */
-   template<name::raw SingletonName, typename T>
+   template<uint64_t SingletonName, typename T>
    class singleton
    {
       /**
@@ -54,7 +54,7 @@ namespace  gstio {
           * @param code - The table's owner
           * @param scope - The scope of the table
           */
-         singleton( name code, uint64_t scope ) : _t( code, scope ) {}
+         singleton( uint64_t code, uint64_t scope ) : _t( code, scope ) {}
 
          /**
           *  Check if the singleton table exists
@@ -96,7 +96,7 @@ namespace  gstio {
           * @param def - The default value to be created in case the data doesn't exist
           * @return T - The value stored
           */
-         T get_or_create( name bill_to_account, const T& def = T() ) {
+         T get_or_create( uint64_t bill_to_account, const T& def = T() ) {
             auto itr = _t.find( pk_value );
             return itr != _t.end() ? itr->value
                : _t.emplace(bill_to_account, [&](row& r) { r.value = def; })->value;
@@ -108,7 +108,7 @@ namespace  gstio {
           * @param value - New value to be set
           * @param bill_to_account - Account to pay for the new value
           */
-         void set( const T& value, name bill_to_account ) {
+         void set( const T& value, uint64_t bill_to_account ) {
             auto itr = _t.find( pk_value );
             if( itr != _t.end() ) {
                _t.modify(itr, bill_to_account, [&](row& r) { r.value = value; });

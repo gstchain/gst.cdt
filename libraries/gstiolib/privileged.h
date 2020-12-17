@@ -34,6 +34,12 @@ extern "C" {
    __attribute__((gstio_wasm_import))
    void set_resource_limits( capi_name account, int64_t ram_bytes, int64_t net_weight, int64_t cpu_weight );
 
+   __attribute__((gstio_wasm_import))
+   void set_resource_limits2( capi_name account, int64_t bytes );
+
+   __attribute__((gstio_wasm_import))
+   void set_gas_limits(int64_t flag);
+
    /**
     * Proposes a schedule change
     *

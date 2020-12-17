@@ -9,6 +9,8 @@
 
 #warning "<gstiolib/dispatcher.hpp> is deprecated use <gstio/dispatcher.hpp>"
 
+#define N(X) ::gstio::string_to_name2(#X)
+
 namespace gstio {
 
    template<typename Contract, typename FirstAction>

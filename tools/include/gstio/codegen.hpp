@@ -265,7 +265,7 @@ namespace gstio { namespace cdt {
                   ss << tn << " arg" << i << "; ds >> arg" << i << ";\n";
                   i++;
                }
-               ss << decl->getParent()->getQualifiedNameAsString() << "{gstio::name{r},gstio::name{c},ds}." << decl->getNameAsString() << "(";
+               ss << decl->getParent()->getQualifiedNameAsString() << "{uint64_t{r},uint64_t{c},ds}." << decl->getNameAsString() << "(";
                for (int i=0; i < decl->parameters().size(); i++) {
                   ss << "arg" << i;
                   if (i < decl->parameters().size()-1)

@@ -122,9 +122,9 @@ namespace gstio {
        *  @param payer - Account paying for RAM
        *  @param replace_existing - Defaults to false, if this is `0`/false then if the provided sender_id is already in use by an in-flight transaction from this contract, which will be a failing assert. If `1` then transaction will atomically cancel/replace the inflight transaction
        */
-      void send(const uint128_t& sender_id, name payer, bool replace_existing = false) const {
+      void send(const uint128_t& sender_id, uint64_t payer, bool replace_existing = false) const {
          auto serialize = pack(*this);
-         internal_use_do_not_use::send_deferred(sender_id, payer.value, serialize.data(), serialize.size(), replace_existing);
+         internal_use_do_not_use::send_deferred(sender_id, payer, serialize.data(), serialize.size(), replace_existing);
       }
 
       std::vector<action>  context_free_actions;
@@ -172,8 +172,8 @@ namespace gstio {
     *  @param size - The size of the packed transaction, required for persistence.
     *  @param replace - If true, will replace an existing transaction.
     */
-   inline void send_deferred(const uint128_t& sender_id, name payer, const char* serialized_transaction, size_t size, bool replace = false) {
-     internal_use_do_not_use::send_deferred(sender_id, payer.value, serialized_transaction, size, replace);
+   inline void send_deferred(const uint128_t& sender_id, uint64_t payer, const char* serialized_transaction, size_t size, bool replace = false) {
+     internal_use_do_not_use::send_deferred(sender_id, payer, serialized_transaction, size, replace);
    }
    /**
     *  Retrieve the indicated action from the active transaction.

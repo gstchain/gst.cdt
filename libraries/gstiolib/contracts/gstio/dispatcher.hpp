@@ -5,7 +5,7 @@
 #include <boost/fusion/include/std_tuple.hpp>
 
 #include <boost/mp11/tuple.hpp>
-
+#define N(X) gstio::string_to_name2(#X)
 namespace gstio {
 
   /**
@@ -131,5 +131,68 @@ extern "C" { \
       } \
    } \
 } \
+
+ static constexpr  char char_to_symbol( char c ) {
+      if( c >= 'a' && c <= 'z' )
+         return (c - 'a') + 6;
+      if( c >= '1' && c <= '5' )
+         return (c - '1') + 1;
+      return 0;
+   }
+
+   static constexpr uint64_t string_to_name2( const char* str ) {
+
+      uint32_t len = 0;
+      while( str[len] ) ++len;
+
+      uint64_t value = 0;
+
+      for( uint32_t i = 0; i <= 12; ++i ) {
+         uint64_t c = 0;
+         if( i < len && i <= 12 ) c = uint64_t(char_to_symbol( str[i] ));
+
+         if( i < 12 ) {
+            c &= 0x1f;
+            c <<= 64-5*(i+1);
+         }
+         else {
+            c &= 0x0f;
+         }
+
+         value |= c;
+      }
+
+      return value;
+   }
+
+static constexpr uint64_t name_suffix( uint64_t n ) {
+      uint32_t remaining_bits_after_last_actual_dot = 0;
+      uint32_t tmp = 0;
+      for( int32_t remaining_bits = 59; remaining_bits >= 4; remaining_bits -= 5 ) { // Note: remaining_bits must remain signed integer
+         // Get characters one-by-one in name in order from left to right (not including the 13th character)
+         auto c = (n >> remaining_bits) & 0x1Full;
+         if( !c ) { // if this character is a dot
+            tmp = static_cast<uint32_t>(remaining_bits);
+         } else { // if this character is not a dot
+            remaining_bits_after_last_actual_dot = tmp;
+         }
+      }
+
+      uint64_t thirteenth_character = n & 0x0Full;
+      if( thirteenth_character ) { // if 13th character is not a dot
+         remaining_bits_after_last_actual_dot = tmp;
+      }
+
+      if( remaining_bits_after_last_actual_dot == 0 ) // there is no actual dot in the name other than potentially leading dots
+         return n;
+
+      // At this point remaining_bits_after_last_actual_dot has to be within the range of 4 to 59 (and restricted to increments of 5).
+
+      // Mask for remaining bits corresponding to characters after last actual dot, except for 4 least significant bits (corresponds to 13th character).
+      uint64_t mask = (1ull << remaining_bits_after_last_actual_dot) - 16;
+      uint32_t shift = 64 - remaining_bits_after_last_actual_dot;
+
+      return ( ((n & mask) << shift) + (thirteenth_character << (shift-1)) );
+   }
 
 }

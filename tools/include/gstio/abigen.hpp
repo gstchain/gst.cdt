@@ -307,7 +307,13 @@ namespace gstio { namespace cdt {
       ojson typedef_to_json( const abi_typedef& t ) {
          ojson o;
          o["new_type_name"] = t.new_type_name;
-         o["type"]          = t.type;
+         //account_name如果是uint64类型，将会出现Couldn't parse uint64_t错误
+         //老版本使用的是name，所以在这儿也替换成了name
+         if( t.new_type_name == "account_name" && t.type == "uint64" ){
+            o["type"]          = "name";
+         }else{
+            o["type"]          = t.type;
+         }
          return o;
       }
 

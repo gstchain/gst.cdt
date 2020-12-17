@@ -10,6 +10,7 @@
 #include "../../core/gstio/name.hpp"
 #include "../../core/gstio/ignore.hpp"
 #include "../../core/gstio/time.hpp"
+//#include "dispatcher.hpp"
 
 #include <boost/preprocessor/variadic/size.hpp>
 #include <boost/preprocessor/variadic/to_tuple.hpp>
@@ -95,8 +96,8 @@ namespace gstio {
     *  @brief Add the specified account to set of accounts to be notified
     *  @param notify_account - name of the account to be verified
     */
-   inline void require_recipient( name notify_account ){
-      internal_use_do_not_use::require_recipient( notify_account.value );
+   inline void require_recipient( uint64_t notify_account ){
+      internal_use_do_not_use::require_recipient( notify_account );
    }
 
    /**
@@ -117,8 +118,8 @@ namespace gstio {
     *  @endcode
     */
    template<typename... accounts>
-   void require_recipient( name notify_account, accounts... remaining_accounts ){
-      internal_use_do_not_use::require_recipient( notify_account.value );
+   void require_recipient( uint64_t notify_account, accounts... remaining_accounts ){
+      internal_use_do_not_use::require_recipient( notify_account );
       require_recipient( remaining_accounts... );
    }
 
@@ -128,8 +129,8 @@ namespace gstio {
     *  @ingroup action
     *  @param name - name of the account to be verified
     */
-   inline void require_auth( name n ) {
-      internal_use_do_not_use::require_auth( n.value );
+   inline void require_auth( uint64_t n ) {
+      internal_use_do_not_use::require_auth( n );
    }
 
    /**
@@ -146,8 +147,8 @@ namespace gstio {
    *  Get the current receiver of the action
    *  @return the account which specifies the current receiver of the action
    */
-   inline name current_receiver() {
-     return name{internal_use_do_not_use::current_receiver()};
+   inline uint64_t current_receiver() {
+     return internal_use_do_not_use::current_receiver();
    }
 
    /**
@@ -184,7 +185,7 @@ namespace gstio {
        * @param a - Name of the account who owns this authorization
        * @param p - Name of the permission
        */
-      permission_level( name a, name p ):actor(a),permission(p){}
+      permission_level( uint64_t a, uint64_t p ):actor(a),permission(p){}
 
       /**
        * Default Constructor
@@ -195,11 +196,11 @@ namespace gstio {
       /**
        * Name of the account who owns this permission
        */
-      name    actor;
+      uint64_t    actor;
       /**
        * Name of the permission
        */
-      name    permission;
+      uint64_t    permission;
 
       /**
        * Check equality of two permissions
@@ -223,7 +224,7 @@ namespace gstio {
     *  @param level - Authorization to be required
     */
    inline void require_auth( const permission_level& level ) {
-      internal_use_do_not_use::require_auth2( level.actor.value, level.permission.value );
+      internal_use_do_not_use::require_auth2( level.actor, level.permission );
    }
 
    /**
@@ -232,8 +233,8 @@ namespace gstio {
     *  @ingroup action
     *  @param n - name of the account to be verified
     */
-   inline bool has_auth( name n ) {
-      return internal_use_do_not_use::has_auth( n.value );
+   inline bool has_auth( uint64_t n ) {
+      return internal_use_do_not_use::has_auth( n );
    }
 
    /**
@@ -242,8 +243,8 @@ namespace gstio {
     *  @ingroup action
     *  @param n - name of the account to check
     */
-   inline bool is_account( name n ) {
-      return internal_use_do_not_use::is_account( n.value );
+   inline bool is_account( uint64_t n ) {
+      return internal_use_do_not_use::is_account( n );
    }
 
    /**
@@ -256,12 +257,12 @@ namespace gstio {
       /**
        *  Name of the account the action is intended for
        */
-      name                       account;
+      uint64_t                       account;
 
       /**
        *  Name of the action
        */
-      name                       name;
+      uint64_t                       name;
 
       /**
        *  List of permissions that authorize this action
@@ -288,7 +289,7 @@ namespace gstio {
        * @param value - The action struct that will be serialized via pack into data
        */
       template<typename T>
-      action( const permission_level& auth, struct name a, struct name n, T&& value )
+      action( const permission_level& auth,  uint64_t a,  uint64_t n, T&& value )
       :account(a), name(n), authorization(1,auth), data(pack(std::forward<T>(value))) {}
 
       /**
@@ -301,7 +302,7 @@ namespace gstio {
        * @param value - The action struct that will be serialized via pack into data
        */
       template<typename T>
-      action( std::vector<permission_level> auths, struct name a, struct name n, T&& value )
+      action( std::vector<permission_level> auths, uint64_t a, uint64_t n, T&& value )
       :account(a), name(n), authorization(std::move(auths)), data(pack(std::forward<T>(value))) {}
 
       /// @cond INTERNAL
@@ -530,23 +531,23 @@ namespace gstio {
    };
 
    template<typename... Args>
-   void dispatch_inline( name code, name act,
+   void dispatch_inline( uint64_t code, uint64_t act,
                          std::vector<permission_level> perms,
                          std::tuple<Args...> args ) {
       action( perms, code, act, std::move(args) ).send();
    }
 
-   template<typename, name::raw>
+   template<typename, uint64_t>
    struct inline_dispatcher;
 
 
-   template<typename T, name::raw Name, typename... Args>
+   template<typename T, uint64_t Name, typename... Args>
    struct inline_dispatcher<void(T::*)(Args...), Name> {
-      static void call(name code, const permission_level& perm, std::tuple<Args...> args) {
-         dispatch_inline(code, name(Name), std::vector<permission_level>(1, perm), std::move(args));
+      static void call(uint64_t code, const permission_level& perm, std::tuple<Args...> args) {
+         dispatch_inline(code, Name, std::vector<permission_level>(1, perm), std::move(args));
       }
-      static void call(name code, std::vector<permission_level> perms, std::tuple<Args...> args) {
-         dispatch_inline(code, name(Name), std::move(perms), std::move(args));
+      static void call(uint64_t code, std::vector<permission_level> perms, std::tuple<Args...> args) {
+         dispatch_inline(code, Name, std::move(perms), std::move(args));
       }
    };
 
@@ -556,7 +557,7 @@ namespace gstio {
 ::gstio::inline_dispatcher<decltype(&CONTRACT_CLASS::FUNCTION_NAME), ACTION_NAME>::call
 
 #define INLINE_ACTION_SENDER2( CONTRACT_CLASS, NAME )\
-INLINE_ACTION_SENDER3( CONTRACT_CLASS, NAME, ::gstio::name(#NAME) )
+INLINE_ACTION_SENDER3( CONTRACT_CLASS, NAME, ::gstio::string_to_name2(#NAME) )
 
 #define INLINE_ACTION_SENDER(...) BOOST_PP_OVERLOAD(INLINE_ACTION_SENDER,__VA_ARGS__)(__VA_ARGS__)
 

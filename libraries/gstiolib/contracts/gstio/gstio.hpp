@@ -12,7 +12,11 @@
 #ifndef GSTIO_NATIVE
 static_assert( sizeof(long) == sizeof(int), "unexpected size difference" );
 #endif
+typedef uint64_t account_name;
 
+typedef uint16_t weight_type;
+
+typedef uint32_t time;
 /**
  * @defgroup core Core API
  * @brief C++ Core API for chain-agnostic smart-contract functionality

@@ -364,7 +364,7 @@ namespace _multi_index_detail {
  *  GSTIO_DISPATCH( mycontract, (myaction) )
  *  @endcode
  */
-template<name::raw IndexName, typename Extractor>
+template<uint64_t IndexName, typename Extractor>
 struct indexed_by {
    enum constants { index_name   = static_cast<uint64_t>(IndexName) };
    typedef Extractor secondary_extractor_type;
@@ -427,23 +427,23 @@ struct indexed_by {
  *  @endcode
  */
 
-template<name::raw TableName, typename T, typename... Indices>
+template<uint64_t TableName, typename T, typename... Indices>
 class multi_index
 {
    private:
 
       static_assert( sizeof...(Indices) <= 16, "multi_index only supports a maximum of 16 secondary indices" );
 
-      constexpr static bool validate_table_name( name n ) {
+      constexpr static bool validate_table_name( uint64_t n ) {
          // Limit table names to 12 characters so that the last character (4 bits) can be used to distinguish between the secondary indices.
-         return n.length() < 13; //(n & 0x000000000000000FULL) == 0;
+         return (n & 0x000000000000000FULL) == 0;
       }
 
       constexpr static size_t max_stack_buffer_size = 512;
 
-      static_assert( validate_table_name( name(TableName) ), "multi_index does not support table names with a length greater than 12");
+      static_assert( validate_table_name(TableName), "multi_index does not support table names with a length greater than 12");
 
-      name     _code;
+      uint64_t     _code;
       uint64_t _scope;
 
       mutable uint64_t _next_primary_key;
@@ -478,17 +478,17 @@ class multi_index
 
       mutable std::vector<item_ptr> _items_vector;
 
-      template<name::raw IndexName, typename Extractor, uint64_t Number, bool IsConst>
+      template<uint64_t IndexName, typename Extractor, uint64_t Number, bool IsConst>
       struct index {
          public:
             typedef Extractor  secondary_extractor_type;
             typedef typename std::decay<decltype( Extractor()(nullptr) )>::type secondary_key_type;
 
-            constexpr static bool validate_index_name( gstio::name n ) {
-               return n.value != 0 && n != gstio::name("primary"); // Primary is a reserve index name.
+            constexpr static bool validate_index_name( uint64_t n ) {
+               return n != 0 && n != gstio::name("primary").value; // Primary is a reserve index name.
             }
 
-            static_assert( validate_index_name( name(IndexName) ), "invalid index name used in multi_index" );
+            static_assert( validate_index_name(IndexName), "invalid index name used in multi_index" );
 
             enum constants {
                table_name   = static_cast<uint64_t>(TableName),
@@ -532,7 +532,7 @@ class multi_index
 
                      if( _item->__iters[Number] == -1 ) {
                         secondary_key_type temp_secondary_key;
-                        auto idxitr = secondary_index_db_functions<secondary_key_type>::db_idx_find_primary(_idx->get_code().value, _idx->get_scope(), _idx->name(), _item->primary_key(), temp_secondary_key);
+                        auto idxitr = secondary_index_db_functions<secondary_key_type>::db_idx_find_primary(_idx->get_code(), _idx->get_scope(), _idx->name(), _item->primary_key(), temp_secondary_key);
                         auto& mi = const_cast<item&>( *_item );
                         mi.__iters[Number] = idxitr;
                      }
@@ -559,14 +559,14 @@ class multi_index
                      int32_t  prev_itr = -1;
 
                      if( !_item ) {
-                        auto ei = secondary_index_db_functions<secondary_key_type>::db_idx_end(_idx->get_code().value, _idx->get_scope(), _idx->name());
+                        auto ei = secondary_index_db_functions<secondary_key_type>::db_idx_end(_idx->get_code(), _idx->get_scope(), _idx->name());
                         gstio::check( ei != -1, "cannot decrement end iterator when the index is empty" );
                         prev_itr = secondary_index_db_functions<secondary_key_type>::db_idx_previous( ei , &prev_pk );
                         gstio::check( prev_itr >= 0, "cannot decrement end iterator when the index is empty" );
                      } else {
                         if( _item->__iters[Number] == -1 ) {
                            secondary_key_type temp_secondary_key;
-                           auto idxitr = secondary_index_db_functions<secondary_key_type>::db_idx_find_primary(_idx->get_code().value, _idx->get_scope(), _idx->name(), _item->primary_key(), temp_secondary_key);
+                           auto idxitr = secondary_index_db_functions<secondary_key_type>::db_idx_find_primary(_idx->get_code(), _idx->get_scope(), _idx->name(), _item->primary_key(), temp_secondary_key);
                            auto& mi = const_cast<item&>( *_item );
                            mi.__iters[Number] = idxitr;
                         }
@@ -653,7 +653,7 @@ class multi_index
 
                uint64_t primary = 0;
                secondary_key_type secondary_copy(secondary);
-               auto itr = secondary_index_db_functions<secondary_key_type>::db_idx_lowerbound( get_code().value, get_scope(), name(), secondary_copy, primary );
+               auto itr = secondary_index_db_functions<secondary_key_type>::db_idx_lowerbound( get_code(), get_scope(), name(), secondary_copy, primary );
                if( itr < 0 ) return cend();
 
                const T& obj = *_multidx->find( primary );
@@ -671,7 +671,7 @@ class multi_index
 
                uint64_t primary = 0;
                secondary_key_type secondary_copy(secondary);
-               auto itr = secondary_index_db_functions<secondary_key_type>::db_idx_upperbound( get_code().value, get_scope(), name(), secondary_copy, primary );
+               auto itr = secondary_index_db_functions<secondary_key_type>::db_idx_upperbound( get_code(), get_scope(), name(), secondary_copy, primary );
                if( itr < 0 ) return cend();
 
                const T& obj = *_multidx->find( primary );
@@ -689,7 +689,7 @@ class multi_index
 
                if( objitem.__iters[Number] == -1 ) {
                   secondary_key_type temp_secondary_key;
-                  auto idxitr = secondary_index_db_functions<secondary_key_type>::db_idx_find_primary(get_code().value, get_scope(), name(), objitem.primary_key(), temp_secondary_key);
+                  auto idxitr = secondary_index_db_functions<secondary_key_type>::db_idx_find_primary(get_code(), get_scope(), name(), objitem.primary_key(), temp_secondary_key);
                   auto& mi = const_cast<item&>( objitem );
                   mi.__iters[Number] = idxitr;
                }
@@ -698,7 +698,7 @@ class multi_index
             }
 
             template<typename Lambda>
-            void modify( const_iterator itr, gstio::name payer, Lambda&& updater ) {
+            void modify( const_iterator itr, uint64_t payer, Lambda&& updater ) {
                gstio::check( itr != cend(), "cannot pass end iterator to modify" );
 
                _multidx->modify( *itr, payer, std::forward<Lambda&&>(updater) );
@@ -715,7 +715,7 @@ class multi_index
                return itr;
             }
 
-            gstio::name get_code()const  { return _multidx->get_code(); }
+            uint64_t    get_code()const  { return _multidx->get_code(); }
             uint64_t    get_scope()const { return _multidx->get_scope(); }
 
             static auto extract_secondary_key(const T& obj) { return secondary_extractor_type()(obj); }
@@ -744,10 +744,10 @@ class multi_index
          return hana::transform( indices_input_type(), [&]( auto&& idx ){
              typedef typename std::decay<decltype(hana::at_c<0>(idx))>::type num_type;
              typedef typename std::decay<decltype(hana::at_c<1>(idx))>::type idx_type;
-             return hana::make_tuple( hana::type_c<index<gstio::name::raw(static_cast<uint64_t>(idx_type::index_name)),
+             return hana::make_tuple( hana::type_c<index<idx_type::index_name,
                                                          typename idx_type::secondary_extractor_type,
                                                          num_type::e::value, false> >,
-                                      hana::type_c<index<gstio::name::raw(static_cast<uint64_t>(idx_type::index_name)),
+                                      hana::type_c<index<idx_type::index_name,
                                                          typename idx_type::secondary_extractor_type,
                                                          num_type::e::value, true> > );
 
@@ -850,7 +850,7 @@ class multi_index
        *  GSTIO_DISPATCH( addressbook, (myaction) )
        *  @endcode
        */
-      multi_index( name code, uint64_t scope )
+      multi_index( uint64_t code, uint64_t scope )
       :_code(code),_scope(scope),_next_primary_key(unset_next_primary_key)
       {}
 
@@ -873,7 +873,7 @@ class multi_index
        *  GSTIO_DISPATCH( addressbook, (myaction) )
        *  @endcode
        */
-      name get_code()const      { return _code; }
+      uint64_t get_code()const      { return _code; }
 
       /**
        *  Returns the `scope` member property.
@@ -935,7 +935,7 @@ class multi_index
             int32_t  prev_itr = -1;
 
             if( !_item ) {
-               auto ei = internal_use_do_not_use::db_end_i64(_multidx->get_code().value, _multidx->get_scope(), static_cast<uint64_t>(TableName));
+               auto ei = internal_use_do_not_use::db_end_i64(_multidx->get_code(), _multidx->get_scope(), static_cast<uint64_t>(TableName));
                gstio::check( ei != -1, "cannot decrement end iterator when the table is empty" );
                prev_itr = internal_use_do_not_use::db_previous_i64( ei , &prev_pk );
                gstio::check( prev_itr >= 0, "cannot decrement end iterator when the table is empty" );
@@ -1239,7 +1239,7 @@ class multi_index
        *  @endcode
        */
       const_iterator lower_bound( uint64_t primary )const {
-         auto itr = internal_use_do_not_use::db_lowerbound_i64( _code.value, _scope, static_cast<uint64_t>(TableName), primary );
+         auto itr = internal_use_do_not_use::db_lowerbound_i64( _code, _scope, static_cast<uint64_t>(TableName), primary );
          if( itr < 0 ) return end();
          const auto& obj = load_object_by_primary_iterator( itr );
          return {this, &obj};
@@ -1283,7 +1283,7 @@ class multi_index
        *  @endcode
        */
       const_iterator upper_bound( uint64_t primary )const {
-         auto itr = internal_use_do_not_use::db_upperbound_i64( _code.value, _scope, static_cast<uint64_t>(TableName), primary );
+         auto itr = internal_use_do_not_use::db_upperbound_i64( _code, _scope, static_cast<uint64_t>(TableName), primary );
          if( itr < 0 ) return end();
          const auto& obj = load_object_by_primary_iterator( itr );
          return {this, &obj};
@@ -1380,7 +1380,7 @@ class multi_index
        *  GSTIO_DISPATCH( addressbook, (myaction) )
        *  @endcode
        */
-      template<name::raw IndexName>
+      template<uint64_t IndexName>
       auto get_index() {
          using namespace _multi_index_detail;
 
@@ -1431,7 +1431,7 @@ class multi_index
        *  GSTIO_DISPATCH( addressbook, (myaction) )
        *  @endcode
        */
-      template<name::raw IndexName>
+      template<uint64_t IndexName>
       auto get_index()const {
          using namespace _multi_index_detail;
 
@@ -1522,7 +1522,7 @@ class multi_index
        *  @endcode
        */
       template<typename Lambda>
-      const_iterator emplace( name payer, Lambda&& constructor ) {
+      const_iterator emplace( uint64_t payer, Lambda&& constructor ) {
          using namespace _multi_index_detail;
 
          gstio::check( _code == current_receiver(), "cannot create objects in table of another contract" ); // Quick fix for mutating db using multi_index that shouldn't allow mutation. Real fix can come in RC2.
@@ -1541,7 +1541,7 @@ class multi_index
 
             auto pk = obj.primary_key();
 
-            i.__primary_itr = internal_use_do_not_use::db_store_i64( _scope, static_cast<uint64_t>(TableName), payer.value, pk, buffer, size );
+            i.__primary_itr = internal_use_do_not_use::db_store_i64( _scope, static_cast<uint64_t>(TableName), payer, pk, buffer, size );
 
             if ( max_stack_buffer_size < size ) {
                free(buffer);
@@ -1553,7 +1553,7 @@ class multi_index
             hana::for_each( _indices, [&]( auto& idx ) {
                typedef typename decltype(+hana::at_c<0>(idx))::type index_type;
 
-               i.__iters[index_type::number()] = secondary_index_db_functions<typename index_type::secondary_key_type>::db_idx_store( _scope, index_type::name(), payer.value, obj.primary_key(), index_type::extract_secondary_key(obj) );
+               i.__iters[index_type::number()] = secondary_index_db_functions<typename index_type::secondary_key_type>::db_idx_store( _scope, index_type::name(), payer, obj.primary_key(), index_type::extract_secondary_key(obj) );
             });
          });
 
@@ -1607,7 +1607,7 @@ class multi_index
        *  @endcode
        */
       template<typename Lambda>
-      void modify( const_iterator itr, name payer, Lambda&& updater ) {
+      void modify( const_iterator itr, uint64_t payer, Lambda&& updater ) {
          gstio::check( itr != end(), "cannot pass end iterator to modify" );
 
          modify( *itr, payer, std::forward<Lambda&&>(updater) );
@@ -1655,7 +1655,7 @@ class multi_index
        *  @endcode
        */
       template<typename Lambda>
-      void modify( const T& obj, name payer, Lambda&& updater ) {
+      void modify( const T& obj, uint64_t payer, Lambda&& updater ) {
          using namespace _multi_index_detail;
 
          const auto& objitem = static_cast<const item&>(obj);
@@ -1683,7 +1683,7 @@ class multi_index
          datastream<char*> ds( (char*)buffer, size );
          ds << obj;
 
-         internal_use_do_not_use::db_update_i64( objitem.__primary_itr, payer.value, buffer, size );
+         internal_use_do_not_use::db_update_i64( objitem.__primary_itr, payer, buffer, size );
 
          if ( max_stack_buffer_size < size ) {
             free( buffer );
@@ -1702,10 +1702,10 @@ class multi_index
                if( indexitr < 0 ) {
                   typename index_type::secondary_key_type temp_secondary_key;
                   indexitr = mutableitem.__iters[index_type::number()]
-                           = secondary_index_db_functions<typename index_type::secondary_key_type>::db_idx_find_primary( _code.value, _scope, index_type::name(), pk,  temp_secondary_key );
+                           = secondary_index_db_functions<typename index_type::secondary_key_type>::db_idx_find_primary( _code, _scope, index_type::name(), pk,  temp_secondary_key );
                }
 
-               secondary_index_db_functions<typename index_type::secondary_key_type>::db_idx_update( indexitr, payer.value, secondary );
+               secondary_index_db_functions<typename index_type::secondary_key_type>::db_idx_update( indexitr, payer, secondary );
             }
          });
       }
@@ -1771,7 +1771,7 @@ class multi_index
          if( itr2 != _items_vector.rend() )
             return iterator_to(*(itr2->_item));
 
-         auto itr = internal_use_do_not_use::db_find_i64( _code.value, _scope, static_cast<uint64_t>(TableName), primary );
+         auto itr = internal_use_do_not_use::db_find_i64( _code, _scope, static_cast<uint64_t>(TableName), primary );
          if( itr < 0 ) return end();
 
          const item& i = load_object_by_primary_iterator( itr );
@@ -1794,7 +1794,7 @@ class multi_index
          if( itr2 != _items_vector.rend() )
             return iterator_to(*(itr2->_item));
 
-         auto itr = internal_use_do_not_use::db_find_i64( _code.value, _scope, static_cast<uint64_t>(TableName), primary );
+         auto itr = internal_use_do_not_use::db_find_i64( _code, _scope, static_cast<uint64_t>(TableName), primary );
          gstio::check( itr >= 0,  error_msg );
 
          const item& i = load_object_by_primary_iterator( itr );
@@ -1904,7 +1904,7 @@ class multi_index
             auto i = objitem.__iters[index_type::number()];
             if( i < 0 ) {
               typename index_type::secondary_key_type secondary;
-              i = secondary_index_db_functions<typename index_type::secondary_key_type>::db_idx_find_primary( _code.value, _scope, index_type::name(), objitem.primary_key(),  secondary );
+              i = secondary_index_db_functions<typename index_type::secondary_key_type>::db_idx_find_primary( _code, _scope, index_type::name(), objitem.primary_key(),  secondary );
             }
             if( i >= 0 )
                secondary_index_db_functions<typename index_type::secondary_key_type>::db_idx_remove( i );

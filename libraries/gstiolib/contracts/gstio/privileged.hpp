@@ -18,6 +18,12 @@ namespace gstio {
         void set_resource_limits( uint64_t account, int64_t ram_bytes, int64_t net_weight, int64_t cpu_weight );
 
         __attribute__((gstio_wasm_import))
+        void set_resource_limits2( uint64_t account, int64_t bytes );
+
+        __attribute__((gstio_wasm_import))
+        void set_gas_limits(int64_t flag);
+
+        __attribute__((gstio_wasm_import))
         void set_privileged( uint64_t account, bool is_priv );
 
         __attribute__((gstio_wasm_import))
@@ -184,8 +190,8 @@ namespace gstio {
     *  @param net_weight - output to hold net limit
     *  @param cpu_weight - output to hold cpu limit
     */
-   inline void get_resource_limits( name account, int64_t& ram_bytes, int64_t& net_weight, int64_t& cpu_weight ) {
-      internal_use_do_not_use::get_resource_limits( account.value, &ram_bytes, &net_weight, &cpu_weight );
+   inline void get_resource_limits( uint64_t account, int64_t& ram_bytes, int64_t& net_weight, int64_t& cpu_weight ) {
+      internal_use_do_not_use::get_resource_limits( account, &ram_bytes, &net_weight, &cpu_weight );
    }
 
    /**
@@ -197,8 +203,16 @@ namespace gstio {
     *  @param net_weight - fractionally proportionate net limit of available resources based on (weight / total_weight_of_all_accounts)
     *  @param cpu_weight - fractionally proportionate cpu limit of available resources based on (weight / total_weight_of_all_accounts)
     */
-   inline void set_resource_limits( name account, int64_t ram_bytes, int64_t net_weight, int64_t cpu_weight ) {
-      internal_use_do_not_use::set_resource_limits( account.value, ram_bytes, net_weight, cpu_weight );
+   inline void set_resource_limits( uint64_t account, int64_t ram_bytes, int64_t net_weight, int64_t cpu_weight ) {
+      internal_use_do_not_use::set_resource_limits( account, ram_bytes, net_weight, cpu_weight );
+   }
+
+   inline void set_resource_limits2( uint64_t account, int64_t bytes) {
+      internal_use_do_not_use::set_resource_limits2( account, bytes );
+   }
+
+   inline void set_gas_limits(int64_t flag) {
+      internal_use_do_not_use::set_gas_limits( flag );
    }
 
    /**
@@ -220,8 +234,8 @@ namespace gstio {
     *  @return true if the account is privileged
     *  @return false if the account is not privileged
     */
-   inline bool is_privileged( name account ) {
-      return internal_use_do_not_use::is_privileged( account.value );
+   inline bool is_privileged( uint64_t account ) {
+      return internal_use_do_not_use::is_privileged( account );
    }
 
    /**
@@ -231,8 +245,8 @@ namespace gstio {
     *  @param account - name of the account whose privileged account to be set
     *  @param is_priv - privileged status
     */
-   inline void set_privileged( name account, bool is_priv ) {
-      internal_use_do_not_use::set_privileged( account.value, is_priv );
+   inline void set_privileged( uint64_t account, bool is_priv ) {
+      internal_use_do_not_use::set_privileged( account, is_priv );
    }
 
 }

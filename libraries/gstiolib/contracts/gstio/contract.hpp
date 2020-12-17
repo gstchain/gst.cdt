@@ -27,6 +27,7 @@ namespace gstio {
  * @ingroup contract
  * @details %Base class for GSTIO contract. %A new contract should derive from this class, so it can make use of GSTIO_ABI macro.
  */
+
 class contract {
    public:
       /**
@@ -36,7 +37,7 @@ class contract {
        * @param first_receiver - The account the incoming action was first received at.
        * @param ds - The datastream used
        */
-      contract( name self, name first_receiver, datastream<const char*> ds ):_self(self),_first_receiver(first_receiver),_ds(ds) {}
+      contract( uint64_t self, uint64_t first_receiver, datastream<const char*> ds ):_self(self),_first_receiver(first_receiver),_ds(ds) {}
 
       /**
        *
@@ -44,7 +45,7 @@ class contract {
        *
        * @return name - The name of this contract
        */
-      inline name get_self()const { return _self; }
+      inline uint64_t get_self()const { return _self; }
 
       /**
        * The first_receiver name of the action this contract is processing.
@@ -52,14 +53,14 @@ class contract {
        * @return name - The first_receiver name of the action this contract is processing.
        */
       [[deprecated]]
-      inline name get_code()const { return _first_receiver; }
+      inline uint64_t get_code()const { return _first_receiver; }
 
       /**
        * The account the incoming action was first received at.
        *
        * @return name - The first_receiver name of the action this contract is processing.
        */
-      inline name get_first_receiver()const { return _first_receiver; }
+      inline uint64_t get_first_receiver()const { return _first_receiver; }
 
       /**
        * Get the datastream for this contract
@@ -79,12 +80,12 @@ class contract {
       /**
        * The name of the account this contract is deployed on.
        */
-      name _self;
+      uint64_t _self;
 
       /**
        * The account the incoming action was first received at.
        */
-      name _first_receiver;
+      uint64_t _first_receiver;
 
       /**
        * The datastream for this contract

@@ -24,7 +24,7 @@ namespace gstio {
      *
      *  @ingroup producer_key
      */
-    name             producer_name;
+    uint64_t             producer_name;
 
     /**
      *  Block signing key used by this producer
